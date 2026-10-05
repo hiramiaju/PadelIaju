@@ -1,0 +1,13 @@
+[
+  {"id":"FIX-SILVIA-LUN-C2","name":"Silvia Garfias","weekday":0,"court":"Cancha 2","start":"20:00","end":"23:00","active":true},
+  {"id":"FIX-SERGIO-MAR-C1","name":"Sergio Castañeda","weekday":1,"court":"Cancha 1","start":"19:00","end":"21:00","active":true},
+  {"id":"FIX-GILBERTO-MAR-C2","name":"Gilberto Navarro","weekday":1,"court":"Cancha 2","start":"18:00","end":"20:00","active":true},
+  {"id":"FIX-MARIO-MIE-C1","name":"Mario Sosa","weekday":2,"court":"Cancha 1","start":"18:00","end":"20:00","active":true},
+  {"id":"FIX-MARIO-MIE-C2","name":"Mario Sosa","weekday":2,"court":"Cancha 2","start":"18:00","end":"20:00","active":true},
+  {"id":"FIX-PAOLA-JUE-C1","name":"Paola Díaz","weekday":3,"court":"Cancha 1","start":"19:00","end":"21:00","active":true},
+  {"id":"FIX-KARINA-JUE-C2","name":"Karina Galaviz","weekday":3,"court":"Cancha 2","start":"18:00","end":"20:00","active":true},
+  {"id":"FIX-LUIS-VIE-C2","name":"Luis Rendón","weekday":4,"court":"Cancha 2","start":"18:00","end":"20:00","active":true},
+  {"id":"FIX-JONATHAN-LUN-C2","name":"Jonathan Olivas","weekday":0,"court":"Cancha 2","start":"08:00","end":"11:00","active":true},
+  {"id":"FIX-JONATHAN-MIE-C2","name":"Jonathan Olivas","weekday":2,"court":"Cancha 2","start":"08:00","end":"11:00","active":true},
+  {"id":"FIX-JONATHAN-VIE-C2","name":"Jonathan Olivas","weekday":4,"court":"Cancha 2","start":"08:00","end":"11:00","active":true}
+]

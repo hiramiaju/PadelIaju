@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IAJU · Panel de administración</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  .admin-wrap{ max-width:1160px; margin:32px auto 80px; padding:0 20px; }
+  .login-box{ max-width:340px; margin:80px auto; background:#fff; padding:24px; border-radius:14px; border:1px solid var(--border); }
+  .login-box input{ width:100%; padding:10px; margin:10px 0; border-radius:8px; border:1px solid var(--border); }
+  .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:24px; }
+  .stat-card{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:16px 18px; }
+  .stat-card .label{ font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+  .stat-card .value{ font-family:'Poppins',Arial,sans-serif; font-size:27px; font-weight:700; color:var(--blue-dark); margin-top:4px; }
+  .stat-card .sub{ font-size:11px; color:var(--muted); margin-top:2px; }
+  .charts-grid{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; margin-bottom:24px; }
+  .chart-card,.table-card{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:18px; }
+  .chart-card h4,.section-title{ margin:0 0 6px; color:var(--blue-dark); font-size:14px; }
+  .section-help{ margin:0 0 16px; color:var(--muted); font-size:12px; line-height:1.5; }
+  .chart-card canvas{ max-height:240px; }
+  .table-card{ overflow-x:auto; margin-bottom:20px; }
+  .today-card{border:1px solid #cce8d2;background:linear-gradient(135deg,#f7fff8 0%,#fff 55%);box-shadow:0 12px 32px rgba(0,61,165,.08);}
+  .today-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+  .today-title{display:flex;align-items:center;gap:10px;margin:0;color:var(--blue-dark);font-size:18px;}
+  .today-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#dfff5f;font-size:20px;}
+  .today-date{font-size:12px;font-weight:700;color:var(--muted);background:#fff;border:1px solid var(--border);padding:8px 12px;border-radius:10px;}
+  .today-empty{padding:28px;text-align:center;color:var(--muted);}
+  .today-empty strong{display:block;color:var(--blue-dark);font-size:15px;margin-bottom:4px;}
+  .filter-row{ display:flex; gap:12px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+  .filter-row input{ padding:8px 10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; }
+  .clear-btn{ background:#eef2f9; color:var(--blue-dark); border:none; padding:9px 14px; border-radius:8px; font-weight:700; cursor:pointer; font-size:12px; }
+  .count-pill{ margin-left:auto; font-size:12px; color:var(--muted); background:#f2f6fc; padding:6px 12px; border-radius:20px; font-weight:600; }
+  table{ width:100%; border-collapse:collapse; min-width:760px; }
+  th,td{ padding:10px 12px; text-align:left; font-size:12px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  th{ background:#f7f9fd; color:var(--blue-dark); font-size:10px; text-transform:uppercase; letter-spacing:.3px; }
+  tr:hover td{ background:#fafcff; }
+  .court-badge{ display:inline-block; padding:3px 9px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .people-badge{ font-weight:700; color:var(--blue-dark); }
+  .code-pill{ font-family:monospace; background:#f2f6fc; padding:3px 8px; border-radius:6px; font-weight:700; letter-spacing:1px; }
+  .empty-row td{ text-align:center; color:var(--muted); padding:26px; }
+  .del-btn{ color:var(--pink); background:none; border:none; cursor:pointer; font-weight:700; font-size:11px; }
+  .admin-form{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:18px; align-items:end; }
+  .admin-form label{ font-size:11px; color:var(--muted); font-weight:700; display:block; }
+  .admin-form input,.admin-form select{ width:100%; margin-top:5px; padding:9px 10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-size:12px; background:#fff; }
+  .admin-form .full{ grid-column:1/-1; }
+  .add-btn{ background:var(--blue-dark); color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:12px; height:38px; }
+  .admin-error{ color:var(--pink); font-size:12px; grid-column:1/-1; min-height:14px; }
+  .fixed-tag{ display:inline-block; background:#edf7ff; color:var(--blue-dark); border-radius:20px; padding:3px 10px; font-size:10px; font-weight:700; }
+  .block-tag{ display:inline-block; background:#fdeef6; color:var(--pink); border-radius:20px; padding:3px 10px; font-size:10px; font-weight:700; }
+  @media (max-width:760px){ .charts-grid{ grid-template-columns:1fr; } .admin-wrap{ padding:0 12px; } }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand brand-link" href="/" aria-label="Instituto de la Juventud">
+      <img class="brand-logo" src="{{ url_for('static', filename='images/iaju-blanco.png') }}" alt="Instituto de la Juventud">
+    </a>
+    <span class="topbar-title">Panel de administración</span>
+  </header>
+
+  <div id="loginView" class="login-box">
+    <img class="login-logo" src="{{ url_for('static', filename='images/iaju-color.png') }}" alt="Instituto de la Juventud">
+    <h3>Acceso administrador</h3>
+    <input type="password" id="pwd" placeholder="Contraseña">
+    <button class="btn-primary" id="loginBtn">Entrar</button>
+    <p id="loginError" style="color:var(--pink);font-size:13px;"></p>
+  </div>
+
+  <div id="dashboardView" class="admin-wrap" style="display:none;">
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="table-card today-card">
+      <div class="today-head">
+        <div>
+          <h3 class="today-title"><span class="today-icon">🎾</span> Reservaciones de hoy</h3>
+          <p class="section-help" style="margin:5px 0 0;">Vista rápida de todas las canchas reservadas para el día de hoy.</p>
+        </div>
+        <span class="today-date" id="todayDateLabel"></span>
+      </div>
+      <div class="count-pill" id="todayCountPill" style="display:inline-block;margin:0 0 12px;">0 reservaciones</div>
+      <table>
+        <thead><tr><th>Horario</th><th>Cancha</th><th>Nombre</th><th>Teléfono</th><th>Personas</th><th>Correo</th><th>Código</th><th></th></tr></thead>
+        <tbody id="todayRows"></tbody>
+      </table>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card"><h4>Reservaciones por día</h4><canvas id="chartByDate"></canvas></div>
+      <div class="chart-card"><h4>Bloques horarios más usados</h4><canvas id="chartBySlot"></canvas></div>
+    </div>
+
+    <div class="table-card">
+      <h4 class="section-title">Reservaciones fijas semanales</h4>
+      <p class="section-help">Estos horarios se bloquean automáticamente todas las semanas. Aquí ya están cargados Silvia, Sergio, Gilberto, Mario, Paola, Karina, Luis y Jonathan.</p>
+      <form class="admin-form" id="fixedForm">
+        <div><label>Nombre<input type="text" name="name" required placeholder="Nombre completo"></label></div>
+        <div><label>Día<select name="weekday" required>
+          <option value="0">Lunes</option><option value="1">Martes</option><option value="2">Miércoles</option>
+          <option value="3">Jueves</option><option value="4">Viernes</option><option value="5">Sábado</option>
+        </select></label></div>
+        <div><label>Cancha<select name="court" required><option>Cancha 1</option><option>Cancha 2</option></select></label></div>
+        <div><label>Inicio<select name="start" id="fixedStart"></select></label></div>
+        <div><label>Fin<select name="end" id="fixedEnd"></select></label></div>
+        <div><button type="submit" class="add-btn">Agregar fija</button></div>
+        <p class="admin-error full" id="fixedError"></p>
+      </form>
+      <table>
+        <thead><tr><th>Persona</th><th>Día</th><th>Cancha</th><th>Horario</th><th>Tipo</th><th></th></tr></thead>
+        <tbody id="fixedRows"></tbody>
+      </table>
+    </div>
+
+    <div class="table-card">
+      <div class="filter-row">
+        <label style="font-size:12px;color:var(--muted);">Filtrar por fecha: <input type="date" id="dateFilter"></label>
+        <button class="clear-btn" id="clearFilter">Ver todas</button>
+        <span class="count-pill" id="countPill">0 reservaciones</span>
+      </div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Horario</th><th>Cancha</th><th>Nombre</th><th>Teléfono</th><th>Personas</th><th>Correo</th><th>Código</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <div class="table-card">
+      <h4 class="section-title">Bloqueos por persona</h4>
+      <p class="section-help">Impide que una persona específica reserve cierto horario, una sola vez o de forma recurrente.</p>
+      <form class="admin-form" id="blockForm">
+        <div><label>Teléfono<input type="tel" name="phone" placeholder="Ej. 4491234567"></label></div>
+        <div><label>Correo<input type="email" name="email" placeholder="persona@correo.com"></label></div>
+        <div><label>Nombre<input type="text" name="name" placeholder="Referencia"></label></div>
+        <div><label>Tipo<select name="type" id="blockType"><option value="once">Una fecha</option><option value="weekly">Cada semana</option></select></label></div>
+        <div id="blockDateField"><label>Fecha<input type="date" name="date"></label></div>
+        <div id="blockWeekdayField" style="display:none;"><label>Día<select name="weekday">
+          <option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option>
+          <option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option>
+        </select></label></div>
+        <div><label>Horario<select name="time" id="blockTimeSelect"><option value="all">Todos</option></select></label></div>
+        <div class="full"><label>Motivo<input type="text" name="reason" placeholder="Opcional; se muestra al usuario"></label></div>
+        <div><button type="submit" class="add-btn">Agregar bloqueo</button></div>
+        <p class="admin-error full" id="blockError"></p>
+      </form>
+      <table>
+        <thead><tr><th>Persona</th><th>Contacto</th><th>Cuándo</th><th>Horario</th><th>Motivo</th><th></th></tr></thead>
+        <tbody id="blockRows"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+  let pwd = '';
+  let cfg = null;
+  let charts = {};
+  const COURT_COLORS = { 'Cancha 1': '#003DA5', 'Cancha 2': '#df1683' };
+  const WEEKDAYS_PY = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  const WEEKDAYS_JS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+  document.getElementById('loginBtn').onclick = login;
+  document.getElementById('pwd').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+  async function login() {
+    pwd = document.getElementById('pwd').value;
+    const res = await fetch('/api/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pwd}) });
+    if (!res.ok) { document.getElementById('loginError').textContent = 'Contraseña incorrecta'; return; }
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('dashboardView').style.display = 'block';
+    await loadConfig();
+    await Promise.all([loadStats(), loadTodayReservations(), loadReservations(), loadFixed(), loadBlocks()]);
+  }
+
+  async function loadConfig() {
+    const res = await fetch('/api/config');
+    cfg = await res.json();
+    const block = document.getElementById('blockTimeSelect');
+    block.innerHTML = '<option value="all">Todos</option>';
+    cfg.slots.forEach(slot => block.insertAdjacentHTML('beforeend', `<option value="${slot}">${slot}</option>`));
+
+    const starts = document.getElementById('fixedStart');
+    const ends = document.getElementById('fixedEnd');
+    starts.innerHTML = cfg.slots.map(s => `<option value="${s}">${s}</option>`).join('');
+    const endTimes = cfg.slots.map(s => addMinutes(s,60));
+    if (!endTimes.includes('23:00')) endTimes.push('23:00');
+    ends.innerHTML = endTimes.map(s => `<option value="${s}">${s}</option>`).join('');
+    starts.value = '18:00'; ends.value = '20:00';
+  }
+
+  document.getElementById('fixedForm').onsubmit = async e => {
+    e.preventDefault();
+    const error = document.getElementById('fixedError'); error.textContent = '';
+    const fd = new FormData(e.target);
+    const payload = Object.fromEntries(fd.entries());
+    payload.weekday = Number(payload.weekday);
+    try {
+      const res = await fetch('/api/admin/fixed-reservations', { method:'POST', headers:{'Content-Type':'application/json','x-admin-password':pwd}, body:JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo agregar');
+      e.target.reset(); document.getElementById('fixedStart').value='18:00'; document.getElementById('fixedEnd').value='20:00';
+      await Promise.all([loadFixed(), loadStats()]);
+    } catch (err) { error.textContent = err.message; }
+  };
+
+  async function loadFixed() {
+    const res = await fetch('/api/admin/fixed-reservations', { headers:{'x-admin-password':pwd} });
+    const rows = await res.json();
+    const tbody = document.getElementById('fixedRows');
+    if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="6">No hay reservaciones fijas.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => `<tr>
+      <td>${esc(r.name)}</td><td>${WEEKDAYS_PY[r.weekday] || '—'}</td>
+      <td><span class="court-badge" style="background:${COURT_COLORS[r.court] || '#888'}">${esc(r.court)}</span></td>
+      <td>${esc(r.start)}–${esc(r.end)}</td><td><span class="fixed-tag">Cada semana</span></td>
+      <td><button class="del-btn" onclick="removeFixed('${r.id}')">Eliminar</button></td>
+    </tr>`).join('');
+  }
+
+  async function removeFixed(id) {
+    if (!confirm('¿Eliminar esta reservación fija semanal? El horario quedará disponible en semanas futuras.')) return;
+    const res = await fetch(`/api/admin/fixed-reservations/${id}`, { method:'DELETE', headers:{'x-admin-password':pwd} });
+    if (res.ok) await Promise.all([loadFixed(), loadStats()]);
+  }
+
+  document.getElementById('blockType').onchange = e => {
+    const weekly = e.target.value === 'weekly';
+    document.getElementById('blockDateField').style.display = weekly ? 'none' : 'block';
+    document.getElementById('blockWeekdayField').style.display = weekly ? 'block' : 'none';
+  };
+
+  document.getElementById('blockForm').onsubmit = async e => {
+    e.preventDefault();
+    const error = document.getElementById('blockError'); error.textContent='';
+    const fd = new FormData(e.target);
+    const payload = Object.fromEntries(fd.entries());
+    if (!payload.phone.trim() && !payload.email.trim()) { error.textContent='Ingresa al menos teléfono o correo.'; return; }
+    try {
+      const res = await fetch('/api/admin/blocks', { method:'POST', headers:{'Content-Type':'application/json','x-admin-password':pwd}, body:JSON.stringify(payload) });
+      const data = await res.json(); if (!res.ok) throw new Error(data.error || 'No se pudo crear el bloqueo');
+      e.target.reset(); document.getElementById('blockDateField').style.display='block'; document.getElementById('blockWeekdayField').style.display='none';
+      await loadBlocks();
+    } catch (err) { error.textContent=err.message; }
+  };
+
+  async function loadBlocks() {
+    const res = await fetch('/api/admin/blocks', { headers:{'x-admin-password':pwd} });
+    const blocks = await res.json();
+    const tbody = document.getElementById('blockRows');
+    if (!blocks.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="6">No hay bloqueos activos.</td></tr>'; return; }
+    tbody.innerHTML = blocks.map(b => `<tr>
+      <td>${esc(b.name || '—')}</td><td>${esc([b.phone,b.email].filter(Boolean).join(' · ') || '—')}</td>
+      <td>${b.type === 'weekly' ? `<span class="block-tag">Cada ${WEEKDAYS_JS[b.weekday] || 'día'}</span>` : formatLong(b.date)}</td>
+      <td>${b.time === 'all' ? 'Todos' : esc(b.time)}</td><td>${esc(b.reason || '—')}</td>
+      <td><button class="del-btn" onclick="removeBlock('${b.id}')">Eliminar</button></td>
+    </tr>`).join('');
+  }
+
+  async function removeBlock(id) {
+    if (!confirm('¿Eliminar este bloqueo?')) return;
+    await fetch(`/api/admin/blocks/${id}`, { method:'DELETE', headers:{'x-admin-password':pwd} });
+    await loadBlocks();
+  }
+
+  function localISODate() {
+    const d = new Date();
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+
+  async function loadTodayReservations() {
+    const today = localISODate();
+    document.getElementById('todayDateLabel').textContent = formatLong(today);
+    const res = await fetch(`/api/admin/reservations?date=${today}`, { headers:{'x-admin-password':pwd} });
+    const rows = await res.json();
+    document.getElementById('todayCountPill').textContent = `${rows.length} reservación${rows.length===1?'':'es'} hoy`;
+    const tbody = document.getElementById('todayRows');
+    if (!rows.length) {
+      tbody.innerHTML='<tr class="empty-row"><td colspan="8"><div class="today-empty"><strong>No hay reservaciones para hoy.</strong>Las nuevas reservaciones aparecerán aquí automáticamente.</div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `<tr>
+      <td><strong>${formatRange(r)}</strong></td>
+      <td><span class="court-badge" style="background:${COURT_COLORS[r.court] || '#888'}">${esc(r.court)}</span></td>
+      <td>${esc(r.name)}</td><td>${esc(r.phone || '—')}</td><td><span class="people-badge">👥 ${r.people ?? '-'}</span></td>
+      <td>${esc(r.email || '—')}</td><td><span class="code-pill">${esc(r.code || '—')}</span></td>
+      <td><button class="del-btn" onclick="removeRow('${r.id}')">Eliminar</button></td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('dateFilter').onchange = e => loadReservations(e.target.value);
+  document.getElementById('clearFilter').onclick = () => { document.getElementById('dateFilter').value=''; loadReservations(); };
+
+  async function loadStats() {
+    const res = await fetch('/api/admin/stats', { headers:{'x-admin-password':pwd} });
+    const s = await res.json();
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card"><div class="label">Reservaciones</div><div class="value">${s.totalReservations}</div></div>
+      <div class="stat-card"><div class="label">Horas reservadas</div><div class="value">${s.totalHours}</div></div>
+      <div class="stat-card"><div class="label">Personas esperadas</div><div class="value">${s.totalPeople}</div></div>
+      <div class="stat-card"><div class="label">Próximas</div><div class="value">${s.upcomingCount}</div></div>
+      <div class="stat-card"><div class="label">Fijas semanales</div><div class="value">${s.fixedWeeklyCount}</div></div>
+      <div class="stat-card"><div class="label">Horario más usado</div><div class="value" style="font-size:19px;">${s.busiestSlot}</div></div>`;
+    drawByDateChart(s.byDate); drawBySlotChart(s.bySlot);
+  }
+
+  function drawByDateChart(byDate) {
+    const ctx = document.getElementById('chartByDate'); if (charts.byDate) charts.byDate.destroy();
+    charts.byDate = new Chart(ctx, { type:'line', data:{ labels:byDate.map(d=>formatShort(d.date)), datasets:[{data:byDate.map(d=>d.count),borderColor:'#003DA5',backgroundColor:'rgba(0,61,165,.12)',fill:true,tension:.3}] }, options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}} });
+  }
+
+  function drawBySlotChart(bySlot) {
+    const ctx = document.getElementById('chartBySlot'); if (charts.bySlot) charts.bySlot.destroy();
+    charts.bySlot = new Chart(ctx, { type:'bar', data:{labels:Object.keys(bySlot),datasets:[{data:Object.values(bySlot),backgroundColor:'#3cb4e5',borderRadius:6}]}, options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}} });
+  }
+
+  async function loadReservations(date) {
+    const url = date ? `/api/admin/reservations?date=${date}` : '/api/admin/reservations';
+    const res = await fetch(url, { headers:{'x-admin-password':pwd} });
+    const rows = await res.json();
+    document.getElementById('countPill').textContent = `${rows.length} reservación${rows.length===1?'':'es'}`;
+    const tbody = document.getElementById('rows');
+    if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="9">No hay reservaciones para mostrar.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => `<tr>
+      <td>${formatLong(r.date)}</td><td>${formatRange(r)}</td>
+      <td><span class="court-badge" style="background:${COURT_COLORS[r.court] || '#888'}">${esc(r.court)}</span></td>
+      <td>${esc(r.name)}</td><td>${esc(r.phone || '—')}</td><td><span class="people-badge">👥 ${r.people ?? '-'}</span></td>
+      <td>${esc(r.email || '—')}</td><td><span class="code-pill">${esc(r.code || '—')}</span></td>
+      <td><button class="del-btn" onclick="removeRow('${r.id}')">Eliminar</button></td>
+    </tr>`).join('');
+  }
+
+  async function removeRow(id) {
+    if (!confirm('¿Eliminar esta reservación?')) return;
+    await fetch(`/api/admin/reservations/${id}`, { method:'DELETE', headers:{'x-admin-password':pwd} });
+    await Promise.all([loadTodayReservations(), loadReservations(document.getElementById('dateFilter').value), loadStats()]);
+  }
+
+  function formatRange(r) {
+    if (r.end_time) return `${esc(r.time)}–${esc(r.end_time)}`;
+    const mins = Number(r.duration_min || 60); return `${esc(r.time)}–${addMinutes(r.time, mins)}`;
+  }
+  function addMinutes(time, mins) { const [h,m]=String(time).split(':').map(Number); const t=h*60+m+mins; return `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`; }
+  function esc(value) { return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
+  function formatLong(iso) { if (!iso) return '—'; const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); }
+  function formatShort(iso) { const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('es-MX',{day:'numeric',month:'short'}); }
+</script>
+</body>
+</html>

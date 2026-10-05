@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Reserva tu cancha de padel en el IAJU. Consulta horarios disponibles y descarga tu pase de acceso.">
+<meta name="theme-color" content="#003DA5">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='images/iaju-color.png') }}">
+<title>IAJU · Reserva tu cancha de padel</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div id="loadingScreen">
+    <img class="loading-logo" src="{{ url_for('static', filename='images/iaju-blanco.png') }}" alt="Instituto de la Juventud">
+    <div class="loading-bars">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <p>Cargando disponibilidad…</p>
+  </div>
+
+  <div id="appContent" class="app-content">
+
+  <header class="topbar">
+    <a class="brand brand-link" href="/" aria-label="Instituto de la Juventud">
+      <img class="brand-logo" src="{{ url_for('static', filename='images/iaju-blanco.png') }}" alt="Instituto de la Juventud">
+    </a>
+    <span class="topbar-title">PADEL · Reserva de canchas</span>
+  </header>
+
+  <main class="wrap">
+    <section class="hero padel-hero">
+      <div class="hero-copy">
+        <span class="eyebrow">IAJU · PÁDEL</span>
+        <h1>Reserva. Juega. <em>Disfruta.</em></h1>
+        <p>Tu cancha está a unos clics. Elige únicamente entre <strong>hoy y los próximos 5 días</strong>, selecciona un horario disponible y listo.</p>
+        <div class="hero-pills"><span>🎾 2 canchas</span><span>⏱️ 1 o 2 horas</span><span>📅 Ventana de 6 días</span></div>
+        <button class="link-btn hero-cancel" id="openCancel">Cancelar una reservación</button>
+      </div>
+      <div class="padel-art" aria-hidden="true"><span class="ball ball-a"></span><span class="ball ball-b"></span><div class="racket"></div></div>
+    </section>
+
+    <section class="panel">
+      <div class="booking-heading">
+        <div><span class="section-kicker">DISPONIBILIDAD</span><h2>Elige el día</h2><p>Solo se muestran las fechas que realmente puedes reservar.</p></div>
+        <button class="date-tool-btn" type="button" id="todayBtn">Volver a hoy</button>
+      </div>
+      <input type="date" id="datePicker" class="hidden-date-picker" tabindex="-1" aria-hidden="true">
+      <div class="day-tabs" id="dayTabs" aria-label="Días disponibles para reservar"></div>
+
+      <div class="courts-legend">
+        <span class="legend-item"><i class="dot free"></i> Disponible</span>
+        <span class="legend-item"><i class="dot busy"></i> Ocupado</span>
+        <span class="legend-item"><i class="dot past"></i> No disponible</span>
+      </div>
+
+      <div id="courtsGrid" class="courts-grid"></div>
+    </section>
+  </main>
+
+  </div><!-- /appContent -->
+
+  <!-- Modal de reservación -->
+  <div class="modal-backdrop" id="bookingModal">
+    <div class="modal">
+      <button class="modal-close" id="closeModal">×</button>
+      <h2>Confirmar reservación</h2>
+      <p class="modal-summary" id="modalSummary"></p>
+
+      <form id="bookingForm">
+        <label>Duración
+          <select name="durationHours" id="durationHours" required>
+            <option value="1">1 hora</option>
+            <option value="2">2 horas consecutivas</option>
+          </select>
+          <small class="field-help" id="durationHelp"></small>
+        </label>
+        <label>Nombre completo
+          <input type="text" name="name" required placeholder="Ej. Ana Torres" autocomplete="name">
+        </label>
+        <label>Teléfono (WhatsApp)
+          <input type="tel" name="phone" required placeholder="Ej. 4491234567" autocomplete="tel">
+        </label>
+        <label>Número de personas que van a acudir
+          <input type="number" name="people" required min="1" max="4" value="4">
+        </label>
+        <label>Correo electrónico (te enviaremos ahí tu comprobante)
+          <input type="email" name="email" required placeholder="tucorreo@ejemplo.com" autocomplete="email">
+        </label>
+        <button type="submit" class="btn-primary" id="submitBtn">Reservar horario</button>
+        <p class="form-error" id="formError"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de éxito -->
+  <div class="modal-backdrop" id="successModal">
+    <div class="modal success-modal">
+      <button class="modal-close" id="closeSuccess">×</button>
+      <h2>¡Listo, tu cancha está reservada! 🎾</h2>
+      <p class="access-note">Descarga la imagen y preséntala al ingresar.</p>
+      <div class="confirm-card" id="confirmCard"></div>
+      <div class="success-actions">
+        <button class="btn-download" id="downloadTicketBtn" type="button" disabled>Descargar pase de acceso (PNG)</button>
+        <p class="hint" id="emailStatus">Preparando tu comprobante…</p>
+        <a class="btn-secondary" id="whatsappBtn" target="_blank" rel="noopener">Enviar por WhatsApp también</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de cancelación -->
+  <div class="modal-backdrop" id="cancelModal">
+    <div class="modal">
+      <button class="modal-close" id="closeCancel">×</button>
+      <h2>Cancelar reservación</h2>
+      <p class="modal-summary">Ingresa el código de tu pase y el teléfono con el que reservaste.</p>
+      <form id="cancelForm">
+        <label>Código de reservación
+          <input type="text" name="code" required placeholder="Ej. AB12CD" style="text-transform:uppercase;">
+        </label>
+        <label>Teléfono con el que reservaste
+          <input type="tel" name="phone" required placeholder="Ej. 4491234567">
+        </label>
+        <button type="submit" class="btn-primary" id="cancelSubmitBtn">Cancelar reservación</button>
+        <p class="form-error" id="cancelError"></p>
+        <p class="form-success" id="cancelSuccess"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
