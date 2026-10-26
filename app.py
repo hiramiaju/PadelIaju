@@ -627,7 +627,15 @@ def create_reservation():
     court = str(payload.get("court", ""))
     date_str = str(payload.get("date", ""))
     time_str = str(payload.get("time", ""))
-    name = str(payload.get("name", "")).strip()
+    first_name = " ".join(str(payload.get("firstName", "")).split())
+    last_name = " ".join(str(payload.get("lastName", "")).split())
+    name = f"{first_name} {last_name}".strip()
+    if not first_name or not last_name:
+        return jsonify({"error": "Nombre(s) y apellido(s) son obligatorios y deben coincidir con tu INE"}), 400
+    if len(first_name) > 100 or len(last_name) > 120:
+        return jsonify({"error": "El nombre o los apellidos exceden el límite permitido"}), 400
+    if payload.get("acceptedNotice") is not True:
+        return jsonify({"error": "Debes aceptar el aviso sobre INE y préstamo de equipo"}), 400
     phone = str(payload.get("phone", "")).strip()
     email = str(payload.get("email", "")).strip()
 
@@ -748,6 +756,8 @@ def create_reservation():
             "end_time": minutes_to_time(end),
             "duration_min": requested_minutes,
             "name": name,
+            "first_name": first_name,
+            "last_name": last_name,
             "phone": phone,
             "email": email,
             "people": people_num,

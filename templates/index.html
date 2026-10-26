@@ -77,9 +77,14 @@
           </select>
           <small class="field-help" id="durationHelp"></small>
         </label>
-        <label>Nombre completo
-          <input type="text" name="name" required placeholder="Ej. Ana Torres" autocomplete="name">
-        </label>
+        <div class="name-fields">
+          <label>Nombre(s) como aparece(n) en tu INE
+            <input type="text" name="firstName" required maxlength="100" placeholder="Ej. Ana María" autocomplete="given-name">
+          </label>
+          <label>Apellido(s) como aparece(n) en tu INE
+            <input type="text" name="lastName" required maxlength="120" placeholder="Ej. Torres García" autocomplete="family-name">
+          </label>
+        </div>
         <label>Teléfono (WhatsApp)
           <input type="tel" name="phone" required placeholder="Ej. 4491234567" autocomplete="tel">
         </label>
@@ -89,6 +94,8 @@
         <label>Correo electrónico (te enviaremos ahí tu comprobante)
           <input type="email" name="email" required placeholder="tucorreo@ejemplo.com" autocomplete="email">
         </label>
+        <div class="ine-notice"><strong>🎾 Aviso importante antes de reservar</strong><p>Para ingresar deberás dejar una INE en caseta. El nombre y los apellidos de tu reservación deben coincidir completamente con los de tu INE. Si no coinciden, no se aplicará penalización por esa discrepancia.</p><p>El préstamo de palas y pelotas está disponible únicamente hasta las <strong>3:30 p. m.</strong> y también requiere dejar una INE en caseta.</p></div>
+        <label class="notice-check"><input type="checkbox" name="acceptNotice" required> Leí y acepto las condiciones de acceso y préstamo de equipo.</label>
         <button type="submit" class="btn-primary" id="submitBtn">Reservar horario</button>
         <p class="form-error" id="formError"></p>
       </form>
@@ -101,6 +108,7 @@
       <button class="modal-close" id="closeSuccess">×</button>
       <h2>¡Listo, tu cancha está reservada! 🎾</h2>
       <p class="access-note">Descarga la imagen y preséntala al ingresar.</p>
+      <div class="ine-notice"><strong>Importante para tu visita</strong><p>Deja una INE en caseta para ingresar. El nombre de tu reservación debe coincidir completamente con tu INE; si no coincide, no se aplicará penalización por esa discrepancia.</p><p>El préstamo de palas y pelotas se realiza hasta las <strong>3:30 p. m.</strong> y requiere dejar una INE en caseta.</p></div>
       <div class="confirm-card" id="confirmCard"></div>
       <div class="success-actions">
         <button class="btn-download" id="downloadTicketBtn" type="button" disabled>Descargar pase de acceso (PNG)</button>

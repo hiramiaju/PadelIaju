@@ -252,7 +252,9 @@ async function submitBooking(e) {
     date: state.selectedDate,
     time: state.pendingSlot.time,
     durationHours,
-    name: fd.get('name').trim(),
+    firstName: fd.get('firstName').trim(),
+    lastName: fd.get('lastName').trim(),
+    acceptedNotice: fd.get('acceptNotice') === 'on',
     phone: fd.get('phone').trim(),
     people: Number(fd.get('people')),
     email: fd.get('email').trim()
@@ -377,6 +379,7 @@ function renderConfirmCard(r) {
       <div class="confirm-row"><span class="k">Horario</span><span class="v">${escapeHtml(r.time)}–${escapeHtml(r.endTime)} hrs</span></div>
       <div class="confirm-row"><span class="k">Personas</span><span class="v">${escapeHtml(r.people)}</span></div>
       <div class="confirm-row"><span class="k">Código de acceso</span><span class="v code">${escapeHtml(r.code)}</span></div>
+      <div class="ticket-notice">INE obligatoria en caseta. Los datos deben coincidir con tu INE; si no coinciden, no se aplicará penalización por esa discrepancia. Palas y pelotas: préstamo hasta las 3:30 p. m., dejando INE.</div>
     </div>`;
 }
 
@@ -474,11 +477,14 @@ async function drawTicket(r) {
     y += 112;
   });
 
-  roundRect(ctx, 105, 1230, W - 210, 55, 18, '#f2f8ff');
+  roundRect(ctx, 105, 1200, W - 210, 90, 18, '#f2f8ff');
   ctx.fillStyle = '#003DA5';
   ctx.font = '700 17px Inter, Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('IAJU · Conserva este pase hasta terminar tu visita', W / 2, 1265);
+  ctx.fillText('INE en caseta · Datos idénticos a la INE', W / 2, 1228);
+  ctx.font = '500 15px Inter, Arial';
+  ctx.fillText('Si no coinciden, no se aplicará penalización por esa discrepancia.', W / 2, 1251);
+  ctx.fillText('Palas y pelotas hasta 3:30 p. m. · Requieren dejar INE', W / 2, 1274);
   ctx.textAlign = 'left';
 
   return canvas.toDataURL('image/png');
